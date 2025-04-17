@@ -1,6 +1,6 @@
 import React from 'react';
 
-function SignupForm() {
+const SignupForm=()=> {
   return (
     <div className='pl-3 pr-3 pt-6'>
       {/* Main Heading */}

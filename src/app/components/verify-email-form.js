@@ -2,7 +2,7 @@
 import React from 'react';
 import VerificationInput from 'react-verification-input';
 
-function VerifyEmailForm() {
+const VerifyEmailForm =()=> {
   return (
     <div className="flex flex-col justify-center items-start p-7 mx-auto">
       
