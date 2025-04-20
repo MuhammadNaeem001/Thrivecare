@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
-import loginImg from '../../../public/images/login-img.png';
-import Logo from '../../../public/images/Group.png';
+import loginImg from '../../../../public/images/login-img.png';
+import Logo from '../../../../public/images/Group.png';
 import VerifyEmailForm from '../../components/verify-email-form';
 
 const Page = ()=> {
