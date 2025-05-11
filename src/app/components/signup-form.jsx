@@ -32,32 +32,51 @@ const SignupForm=()=> {
   const handleRegister = async (e)=>{
     e.preventDefault();
 
-    const hashedPassword = await bcrypt.hash(formData.password, 10);
+    // const hashedPassword = await bcrypt.hash(formData.password, 10);
+    // try {
+      
+    //   const {data,error} = await supabase.from("users").insert({
+    //     fullName: formData.fullName,
+    //     email: formData.email,
+    //     password: hashedPassword,
+    //     phone: formData.phoneNumber
+  
+    //   })
+    //   if (error) {
+    //     console.error('Error signing up:', error.message);
+    //     return;
+    //   };
+
+    //   console.log('User signed up successfully:', data);
+    //   router.push('/')
+    // } catch (error) {
+    //   console.error('Error signing up:', error.message);
+    // }
 
 
 
     try {
       
-      const {data,error} = await supabase.from("users").insert({
-        fullName: formData.fullName,
-        email: formData.email,
-        password: hashedPassword,
-        phone: formData.phoneNumber
-  
+      const res = await fetch("/api/singup",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          email:formData.email,
+          password:formData.password
+        })
       })
-      if (error) {
-        console.error('Error signing up:', error.message);
-        return;
-      };
 
-      console.log('User signed up successfully:', data);
-      router.push('/')
+      const data = await res.json();  
+      console.log(data)
+      if (res.ok) {
+        router.push("/auth/verify-email?email=" + encodeURIComponent(email));
+      }
     } catch (error) {
-      console.error('Error signing up:', error.message);
+      console.log(error,"Error in signing up while using supabase auth and next auth")
     }
   }
-
-  
 
   return (
     <div className='pl-3 pr-3 pt-6'>

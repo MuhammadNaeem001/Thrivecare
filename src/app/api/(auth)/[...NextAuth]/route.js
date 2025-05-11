@@ -1,56 +1,66 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from 'bcryptjs';
-import { supabase } from "@/app/lib/supabase";
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { SupabaseAdapter } from '@auth/supabase-adapter';
+import { supabase } from '@/app/lib/supabase.js';
 
 export default NextAuth({
+  adapter: SupabaseAdapter({
+    url:    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    secret: process.env.SUPABASE_SERVICE_ROLE_KEY      // service-role key
+  }),
+
   providers: [
     CredentialsProvider({
-      name: "Credentials",
+      name: 'Email + Password',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email:    { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials) {
-        const { email, password } = credentials;
+      async authorize (creds) {
+        if (!creds?.email || !creds?.password) return null;
 
-        const { data: user, error } = await supabase
-          .from('users') 
-          .select('*')
-          .eq('email', email)
-          .single(); 
+        // 1 – check credentials against Supabase Auth
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email:    creds.email,
+          password: creds.password
+        });
+        if (error) throw new Error(error.message);
 
-        if (error || !user) {
-          throw new Error('User not found');
+        // 2 – block unverified users
+        if (!data.user.email_confirmed_at) {
+          throw new Error('Email not verified');
         }
 
-        const isValid = await bcrypt.compare(password, user.password);
-
-        if (isValid) {
-          return { id: user.id, email: user.email };
-        }
-
-        throw new Error('Invalid credentials');
-      },
-    }),
+        // 3 – return minimal user object for the JWT
+        return {
+          id:    data.user.id,
+          email: data.user.email,
+          name:  data.user.user_metadata?.full_name || null
+        };
+      }
+    })
   ],
+
   callbacks: {
-    async jwt({ token, user }) {
-     
-        if (user) {
-        token.id = user.id;
+    async jwt ({ token, user }) {
+      if (user) {
+        token.id    = user.id;
         token.email = user.email;
       }
       return token;
     },
-    async session({ session, token }) {
-      session.id = token.id;
-      session.email = token.email;
+    async session ({ session, token }) {
+      if (token?.id && session.user) session.user.id = token.id;
       return session;
-    },
+    }
   },
-  secret: process.env.NEXT_PUBLIC_NEXTAUTH_SECRET,
-  session: {
-    jwt: true,
+
+  pages: {
+    signIn:        '/auth/sign-in',
+    verifyRequest: '/auth/verify-email',
+    error:         '/auth/error'
   },
+
+  session: { strategy: 'jwt' },
+  secret:  process.env.NEXTAUTH_SECRET
 });
