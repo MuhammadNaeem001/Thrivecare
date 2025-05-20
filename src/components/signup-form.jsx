@@ -1,7 +1,5 @@
 "use client"
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
-import bcrypt from 'bcryptjs';
 import { useRouter } from 'next/navigation';
 
 
@@ -14,6 +12,8 @@ const SignupForm=()=> {
     password:"",
     phoneNumber:"",
   })
+  const [signupLoading,setSignupLoading] = useState(false);
+  const [success,setSuccess] = useState(false);
 
   const router = useRouter();
 
@@ -32,30 +32,8 @@ const SignupForm=()=> {
   const handleRegister = async (e)=>{
     e.preventDefault();
 
-    // const hashedPassword = await bcrypt.hash(formData.password, 10);
-    // try {
-      
-    //   const {data,error} = await supabase.from("users").insert({
-    //     fullName: formData.fullName,
-    //     email: formData.email,
-    //     password: hashedPassword,
-    //     phone: formData.phoneNumber
-  
-    //   })
-    //   if (error) {
-    //     console.error('Error signing up:', error.message);
-    //     return;
-    //   };
-
-    //   console.log('User signed up successfully:', data);
-    //   router.push('/')
-    // } catch (error) {
-    //   console.error('Error signing up:', error.message);
-    // }
-
-
-
     try {
+      setSignupLoading(true);
       
       const res = await fetch("/api/singup",{
         method:"POST",
@@ -64,21 +42,39 @@ const SignupForm=()=> {
         },
         body:JSON.stringify({
           email:formData.email,
-          password:formData.password
+          password:formData.password,
+          contactNo :formData.phoneNumber,
+          fullName:formData.fullName
         })
       })
-
       const data = await res.json();  
-      console.log(data)
-      if (res.ok) {
-        router.push("/auth/verify-email?email=" + encodeURIComponent(email));
+      console.log(data);
+      if(res.ok){
+        setSuccess(true);
       }
+
     } catch (error) {
       console.log(error,"Error in signing up while using supabase auth and next auth")
+    }finally{
+      setSignupLoading(false);
     }
   }
 
+if(success) {
   return (
+    <div className='pl-3 pr-3 pt-6'>
+      <h1 className='font-Poppins text-[30px] font-bold mb-6'>Account Created Successfully</h1>
+      <p className='font-Poppins text-[16px]'>Please check your email for the verification link.</p>
+      <button onClick={()=>router.push("/auth/signin")} className=" font-Poppins cursor-pointer w-[525px] h-[48px] gap-[24px] bg-[#108572] hover:bg-[#108572] text-[#FFFFFF] font-bold text-[16px] py-3 rounded-md mt-4">
+        Go to Login
+      </button>
+    </div>
+  )
+}
+
+
+ if(!success){
+   return (
     <div className='pl-3 pr-3 pt-6'>
       {/* Main Heading */}
       <div className='text-[30px] font-bold mb-6'>
@@ -140,7 +136,7 @@ const SignupForm=()=> {
 
       {/* Submit Button */}
       <button onClick={handleRegister} type='submit' className=" font-Poppins cursor-pointer w-[525px] h-[48px] gap-[24px] bg-[#108572] hover:bg-[#108572] text-[#FFFFFF] font-bold text-[16px] py-3 rounded-md mt-4">
-        Create
+        {signupLoading ? "Creating Account..." : "Create Account"}
       </button>
    </form>
       
@@ -150,6 +146,7 @@ const SignupForm=()=> {
   </p>
     </div>
   );
+ }
 }
 
 export default SignupForm;

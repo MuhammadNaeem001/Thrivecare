@@ -1,6 +1,6 @@
 // pages/api/auth/verify-otp.ts
 
-import { supabase } from "@/app/lib/supabase";
+import { supabase } from "@/app/utils/supabase";
 
 export async function POST(req, res) {
 

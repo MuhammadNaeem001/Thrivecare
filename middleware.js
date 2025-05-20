@@ -1,15 +1,19 @@
-import { withAuth } from "next-auth/middleware";
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export default withAuth({
-  pages: {
-    signIn: "/auth/signin",
-  },
-});
+export async function middleware(req) {
+  const token = await getToken({ req, secret: process.env.NEXT_PUBLIC_NEXTAUTH_SECRET });
+
+  const restrictedPaths = ['/auth/signin', '/auth/signup'];
+
+
+  if (token && restrictedPaths.includes(req.nextUrl.pathname)) {
+    return NextResponse.redirect(new URL('/', req.url));  
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    "/dashboard/:path*",
-    "/profile/:path*",
-    "/api/protected/:path*",
-  ],
+  matcher: ['/auth/signin', '/auth/signup'], 
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
-import SignupForm from '@/app/components/signup-form';
+import SignupForm from '@/components/signup-form';
 // import loginImg from '../../../../public/images/login-img.png';
 // import Logo from '../../../../public/images/Group.png';
 // import Signup from '../../../components/signup-form';
